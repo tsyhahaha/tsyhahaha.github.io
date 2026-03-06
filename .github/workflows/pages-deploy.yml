@@ -49,10 +49,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          # cache: 'npm'  # 禁用缓存，避免 lock file 问题
 
       - name: Install npm dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build assets
         run: npm run build
