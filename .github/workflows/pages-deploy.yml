@@ -44,6 +44,18 @@ jobs:
         with:
           ruby-version: 3.2.2
           bundler-cache: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Build assets
+        run: npm run build
       
       - name: Install dependencies
         run: |
