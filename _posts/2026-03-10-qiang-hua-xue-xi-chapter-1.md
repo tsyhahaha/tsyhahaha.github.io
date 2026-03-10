@@ -62,13 +62,17 @@ Policy 决定了 Agent 在给定状态下应该采取什么行动。在 RL 的�
 ## 3. 轨迹 (Trajectories) 与环境转移
 
 我们将 Agent 与环境交互产生的一系列状态与动作构成的序列称为一条**轨迹 (Trajectory)**，在工程文献里它也常被称为 **Episode** 或 **Rollout**：
+
 $$
 \tau = (s_0, a_0, r_0, s_1, a_1, r_1, \dots)
+
 $$
 
 这个演化过程强依赖于**状态转移概率**:
+
 $$
 P(s_{t+1}|s_t, a_t)
+
 $$
 只要给定当前 State 和 Action，下一个 State 的概率分布就随之确定下来，这被称为**马尔可夫性 (Markov Property)** —— 未来状态仅仅取决于当前，与历史路径无关。
 
@@ -81,8 +85,10 @@ $$
 强化学习解决的是长视野问题（Long-horizon problem）。单步的 Reward $r_t$ 并不能反映全局的好坏（国际象棋里有时必须通过献祭棋子来换取最终的绝杀）。因此，RL 的优化目标是**最大化一条轨迹上的累计期望奖励**，我们称之为 **Return**。
 
 最常见的形式是带折扣因子 (Discount Factor) 的回报：
+
 $$
 R(\tau) = \sum_{t=0}^{\infty} \gamma^t r_t \quad (\gamma \in [0, 1])
+
 $$
 
 引入 $\gamma$ 既能在数学上通过压缩映射保证无限步级数情况下的收敛性，也直观反映了一种“衰减”特质：离当下越远的奖励，因其包含的物理不确定性更高，因此权重应当被衰减。
@@ -101,12 +107,14 @@ $$
 
 $$
 V^\pi(s) = \mathbb{E}_{\tau \sim \pi} \left[ R(\tau) \mid s_0 = s \right]
+
 $$
 
 *   **动作价值函数 (Action-Value Function, $Q(s, a)$)**：在状态 $s$ 下，Agent **先硬性执行动作 $a$**，之后再遵循策略 $\pi$ 走完余生，期望获得的累积 Return。
 
 $$
 Q^\pi(s, a) = \mathbb{E}_{\tau \sim \pi} \left[ R(\tau) \mid s_0 = s, a_0 = a \right]
+
 $$
 
 > **Value Function 是生成模型背后的“隐形裁判”**
@@ -116,13 +124,17 @@ $$
 #### 价值函数的关系
 
 在 LLM 语境下，状态 $s$ 和动作 $a$ 都是离散的：
+
 $$
 V^\pi(s)=E_{a\sim\pi}[Q^\pi(s,a)]=\sum_{a}\pi(a|s)Q^\pi(s,a)
+
 $$
 
 $Q^\pi(s,a)$ 等于即时反馈 $r$ + 下一状态的 state-value $V^\pi(s')$：
+
 $$
 Q^\pi(s,a)=r(s,a)+\gamma\sum_{s'}P(s'|s,a)V^\pi(s')
+
 $$
 
 ## 6. 贝尔曼方程 (Bellman Equation)：将未来拆解为当下
@@ -132,8 +144,10 @@ $$
 无限期的 Return 期望看似是一个需要穷举未来所有路经才能解析的庞然大物，但贝尔曼方程巧妙地利用了马尔可夫性，将未来的价值拆分成了极其优雅的两部分：**即时奖励 + 下一状态的折扣未来价值**。
 
 对于状态价值函数，它的贝尔曼期望方程展开如下：
+
 $$
 V^\pi(s) = \mathbb{E}_{a \sim \pi, s' \sim P} \left[ r(s,a) + \gamma V^\pi(s') \right]
+
 $$
 
 这一递推结构是深度强化学习几乎所有算法的灵魂底色。它意味着，为了更新当前状态的价值评估，我们根本不需要等待轨迹走到游戏通关；我们完全可以利用**自举 (Bootstrapping)** 的思想，用下一个状态的“估计价值”反过来更新当前的“估计价值”。大名鼎鼎的 Q-learning 和各种时序差分 (TD) 算法正立足于此。
@@ -143,8 +157,10 @@ $$
 在更新策略时，“只知道一个动作能拿到高分”是不够的。比如在股市大牛市里（环境状态总体极佳），随便买只股票（任意 Action）都能赚钱。我们真正需要知道的是：**这个动作 $a$ 比常规预期的平均水平好多少？**
 
 这就是**优势函数 (Advantage Function)** $A(s, a)$ 的物理直觉：
+
 $$
 A^\pi(s, a) = Q^\pi(s, a) - V^\pi(s)
+
 $$
 
 它剔除了状态本身的基准难度——如果 $A(s, a) > 0$，说明这个动作比系统平均估计更优秀，应该增加采取该动作的概率；反之则应该抑制。
@@ -174,25 +190,32 @@ V^\pi(s)&=\sum_{a}\pi(a|s)Q^\pi(s,a)\\
 &=E_{a\sim \pi}[r(s,a)]+\gamma E_{a\sim\pi}[E_{s'\sim P}[V^\pi(s')]]\\\\
 &=E_{a\sim\pi,s'\sim P}[r(s,a)+\gamma V^\pi(s')]
 \end{aligned}
+
 $$
 
 **向量形式**
 
 状态价值函数可写为
+
 $$
 V_\pi(s)=r_\pi(s)+\gamma\sum_{s'}P_\pi(s'|s)V_\pi(s')
+
 $$
 其中
+
 $$
 \begin{aligned}
 &V_\pi = [V_\pi(s_1),...,V_\pi(s_n)]^T\in \mathbb{R}^n\\
 &r_\pi = [r_\pi(s_1),...,r_\pi(s_n)]^T\in \mathbb{R}^n\\
 &P_\pi\in \mathbb{R}^{n\times n}\ \text{and}\ [P_\pi]_{ij}=p_\pi(s_j|s_i)
 \end{aligned}
+
 $$
 所以
+
 $$
 V_\pi=r_\pi+\gamma P_\pi V_\pi
+
 $$
 
 
@@ -206,5 +229,6 @@ Q^\pi(s,a)&=r(s,a)+\gamma\sum_{s'}P(s'|s,a)V^\pi(s')\\
 &=r(s,a)+\gamma E_{s'\sim P,a'\sim\pi}E[Q(s',a')]\\\\
 &=E_{a'\sim \pi, s'\sim P}[r(s,a)+\gamma Q(s',a')]
 \end{aligned}
+
 $$
 
