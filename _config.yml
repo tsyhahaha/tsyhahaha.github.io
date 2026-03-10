@@ -225,3 +225,12 @@ jekyll-archives:
   permalinks:
     tag: /tags/:name/
     category: /categories/:name/
+
+# Mermaid diagram theme
+mermaid:
+  theme: base
+  themeVariables:
+    fontFamily: monospace
+  flowchart:
+    useMaxWidth: false
+    curve: basis
