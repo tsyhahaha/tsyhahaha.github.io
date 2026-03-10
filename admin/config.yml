@@ -1,0 +1,36 @@
+backend:
+  name: git-gateway
+  branch: main
+
+# Git Gateway 自动会使用 Netlify 的身份验证
+
+media_folder: "assets/img"
+public_folder: "/assets/img"
+
+collections:
+  - name: "posts"
+    label: "Posts"
+    folder: "_posts"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - {label: "Layout", name: "layout", widget: "hidden", default: "post"}
+      - {label: "Title", name: "title", widget: "string"}
+      - {label: "Date", name: "date", widget: "datetime", format: "YYYY-MM-DD HH:mm:ss Z"}
+      - {label: "Tags", name: "tags", widget: "list", required: false}
+      - {label: "Categories", name: "categories", widget: "list", required: false}
+      - {label: "TOC", name: "toc", widget: "boolean", default: true, required: false}
+      - {label: "MathJax", name: "mathjax", widget: "boolean", default: false, required: false}
+      - {label: "Mermaid", name: "mermaid", widget: "boolean", default: false, required: false}
+      - {label: "Cover Image", name: "cover", widget: "image", required: false}
+      - {label: " author's original name", name: "author", widget: "string", required: false}
+      - {label: "Pin", name: "pin", widget: "boolean", default: false, required: false}
+      - {label: "Body", name: "body", widget: "markdown"}
+
+  - name: "drafts"
+    label: "Drafts"
+    folder: "_drafts"
+    create: true
+    fields:
+      - {label: "Title", name: "title", widget: "string"}
+      - {label: "Body", name: "body", widget: "markdown"}
