@@ -18,7 +18,7 @@ mermaid: true
 大多数强化学习的理论框架都可以用马尔可夫决策过程（MDP）来形式化。我们先来看构成这个世界交互循环的最基础元素：
 
 ```mermaid
-%%{init: {"theme": "base", "themeVariables": {"fontFamily": "monospace"}}}%%
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Menlo, Monaco, monospace", "fontSize": "14px", "primaryColor": "#e8f4f8", "primaryTextColor": "#1a1a2e", "primaryBorderColor": "#ffffff", "lineColor": "#ffffff", "secondaryColor": "#d4e8ed", "tertiaryColor": "#f0f8ff", "background": "#1a1a2e", "mainBkg": "#2d2d44", "nodeBorder": "#ffffff", "clusterBkg": "#2d2d44", "clusterBorder": "#4a4a6a", "titleColor": "#ffffff"}}}%%
 graph TD
     A["Agent (智能体)"]
     E["Environment (环境)"]
