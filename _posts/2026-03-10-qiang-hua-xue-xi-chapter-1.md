@@ -1,3 +1,12 @@
+---
+title: 强化学习 Chapter 1 —— 核心概念与大模型视角的重构
+date: 2026-03-10 12:00:00 +0800
+categories: [RL, 笔记]
+tags: [强化学习, RL, LLM, MDP]
+math: true
+mermaid: true
+---
+
 # 强化学习 Chapter 1 —— 核心概念与大模型视角的重构
 
 > 如果说 Pre-training 赋予了 LLM 认识世界的基础知识，那么 Post-training（本质上是某种形式的强化学习）则赋予了它们与人类价值观对齐、进行复杂逻辑推理的能力。理解强化学习（RL），是我们真正理解当前 LLM 能力边界的必经之路。
