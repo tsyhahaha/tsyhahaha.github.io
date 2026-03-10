@@ -231,6 +231,10 @@ mermaid:
   theme: base
   themeVariables:
     fontFamily: monospace
+    handDrawn: true
   flowchart:
     useMaxWidth: false
+  sequence:
+    useMaxWidth: false
+    theme: hand
     curve: basis
