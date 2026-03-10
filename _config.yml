@@ -231,24 +231,31 @@ jekyll-archives:
 mermaid:
   theme: base
   themeVariables:
-    fontFamily: Menlo, Monaco, 'Courier New', monospace
-    fontSize: 14px
-    lineColor: '#ffffff'
-    primaryColor: '#e8f4f8'
-    secondaryColor: '#d4e8ed'
-    tertiaryColor: '#f0f8ff'
-    background: '#1a1a2e'
-    mainBkg: '#2d2d44'
-    nodeBorder: '#ffffff'
-    clusterBkg: '#2d2d44'
-    clusterBorder: '#4a4a6a'
-    titleColor: '#ffffff'
-    edgeLabelBackground: '#2d2d44'
+    fontFamily: "'Menlo', 'Monaco', 'Courier New', monospace"
+    fontSize: '14px'
   flowchart:
     useMaxWidth: false
     curve: basis
   sequence:
     useMaxWidth: false
+
+# Mermaid 初始化配置 - 浅色卡通风格
+mermaid_init:
+  theme: base
+  themeVariables:
+    primaryColor: "#e8f4f8"
+    primaryTextColor: "#1a1a2e"
+    primaryBorderColor: "#ffffff"
+    lineColor: "#ffffff"
+    secondaryColor: "#d4e8ed"
+    tertiaryColor: "#f0f8ff"
+    background: "#1a1a2e"
+    mainBkg: "#2d2d44"
+    nodeBorder: "#ffffff"
+    clusterBkg: "#2d2d44"
+    clusterBorder: "#4a4a6a"
+    titleColor: "#ffffff"
+    edgeLabelBackground: "#2d2d44"
     boxMargin: 10
     boxTextMargin: 5
     noteMargin: 10
