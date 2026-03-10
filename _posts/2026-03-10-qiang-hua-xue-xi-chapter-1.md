@@ -119,6 +119,7 @@ $$
 $$
 V^\pi(s)=E_{a\sim\pi}[Q^\pi(s,a)]=\sum_{a}\pi(a|s)Q^\pi(s,a)
 $$
+
 $Q^\pi(s,a)$ 等于即时反馈 $r$ + 下一状态的 state-value $V^\pi(s')$：
 $$
 Q^\pi(s,a)=r(s,a)+\gamma\sum_{s'}P(s'|s,a)V^\pi(s')
