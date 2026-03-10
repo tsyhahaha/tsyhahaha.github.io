@@ -230,8 +230,25 @@ jekyll-archives:
 mermaid:
   theme: base
   themeVariables:
-    fontFamily: monospace
+    fontFamily: Menlo, Monaco, 'Courier New', monospace
+    fontSize: 14px
+    lineColor: '#ffffff'
+    primaryColor: '#e8f4f8'
+    secondaryColor: '#d4e8ed'
+    tertiaryColor: '#f0f8ff'
+    background: '#1a1a2e'
+    mainBkg: '#2d2d44'
+    nodeBorder: '#ffffff'
+    clusterBkg: '#2d2d44'
+    clusterBorder: '#4a4a6a'
+    titleColor: '#ffffff'
+    edgeLabelBackground: '#2d2d44'
   flowchart:
     useMaxWidth: false
+    curve: basis
   sequence:
     useMaxWidth: false
+    boxMargin: 10
+    boxTextMargin: 5
+    noteMargin: 10
+    messageMargin: 8

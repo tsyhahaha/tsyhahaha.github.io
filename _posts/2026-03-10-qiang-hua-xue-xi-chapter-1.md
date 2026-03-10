@@ -64,6 +64,7 @@ Policy 决定了 Agent 在给定状态下应该采取什么行动。在 RL 的�
 我们将 Agent 与环境交互产生的一系列状态与动作构成的序列称为一条**轨迹 (Trajectory)**，在工程文献里它也常被称为 **Episode** 或 **Rollout**：
 
 $$
+
 \tau = (s_0, a_0, r_0, s_1, a_1, r_1, \dots)
 
 $$
@@ -71,9 +72,11 @@ $$
 这个演化过程强依赖于**状态转移概率**:
 
 $$
+
 P(s_{t+1}|s_t, a_t)
 
 $$
+
 只要给定当前 State 和 Action，下一个 State 的概率分布就随之确定下来，这被称为**马尔可夫性 (Markov Property)** —— 未来状态仅仅取决于当前，与历史路径无关。
 
 > **明确转移极大地简化了问题**
@@ -87,6 +90,7 @@ $$
 最常见的形式是带折扣因子 (Discount Factor) 的回报：
 
 $$
+
 R(\tau) = \sum_{t=0}^{\infty} \gamma^t r_t \quad (\gamma \in [0, 1])
 
 $$
@@ -106,6 +110,7 @@ $$
 *   **状态价值函数 (State-Value Function, $V(s)$)**：在状态 $s$ 下，Agent 开始遵循策略 $\pi$ 走到时间尽头，期望获得的累积 Return。
 
 $$
+
 V^\pi(s) = \mathbb{E}_{\tau \sim \pi} \left[ R(\tau) \mid s_0 = s \right]
 
 $$
@@ -113,6 +118,7 @@ $$
 *   **动作价值函数 (Action-Value Function, $Q(s, a)$)**：在状态 $s$ 下，Agent **先硬性执行动作 $a$**，之后再遵循策略 $\pi$ 走完余生，期望获得的累积 Return。
 
 $$
+
 Q^\pi(s, a) = \mathbb{E}_{\tau \sim \pi} \left[ R(\tau) \mid s_0 = s, a_0 = a \right]
 
 $$
@@ -126,6 +132,7 @@ $$
 在 LLM 语境下，状态 $s$ 和动作 $a$ 都是离散的：
 
 $$
+
 V^\pi(s)=E_{a\sim\pi}[Q^\pi(s,a)]=\sum_{a}\pi(a|s)Q^\pi(s,a)
 
 $$
@@ -133,6 +140,7 @@ $$
 $Q^\pi(s,a)$ 等于即时反馈 $r$ + 下一状态的 state-value $V^\pi(s')$：
 
 $$
+
 Q^\pi(s,a)=r(s,a)+\gamma\sum_{s'}P(s'|s,a)V^\pi(s')
 
 $$
@@ -146,6 +154,7 @@ $$
 对于状态价值函数，它的贝尔曼期望方程展开如下：
 
 $$
+
 V^\pi(s) = \mathbb{E}_{a \sim \pi, s' \sim P} \left[ r(s,a) + \gamma V^\pi(s') \right]
 
 $$
@@ -159,6 +168,7 @@ $$
 这就是**优势函数 (Advantage Function)** $A(s, a)$ 的物理直觉：
 
 $$
+
 A^\pi(s, a) = Q^\pi(s, a) - V^\pi(s)
 
 $$
@@ -183,6 +193,7 @@ $$
 #### 1. 贝尔曼期望方程：状态价值函数推导
 
 $$
+
 \begin{aligned}
 V^\pi(s)&=\sum_{a}\pi(a|s)Q^\pi(s,a)\\
 &=\sum_{a}\pi(a|s)[r(s,a)+\gamma\sum_{s'}P(s'|s,a)V^\pi(s')]\\
@@ -198,12 +209,15 @@ $$
 状态价值函数可写为
 
 $$
+
 V_\pi(s)=r_\pi(s)+\gamma\sum_{s'}P_\pi(s'|s)V_\pi(s')
 
 $$
+
 其中
 
 $$
+
 \begin{aligned}
 &V_\pi = [V_\pi(s_1),...,V_\pi(s_n)]^T\in \mathbb{R}^n\\
 &r_\pi = [r_\pi(s_1),...,r_\pi(s_n)]^T\in \mathbb{R}^n\\
@@ -211,9 +225,11 @@ $$
 \end{aligned}
 
 $$
+
 所以
 
 $$
+
 V_\pi=r_\pi+\gamma P_\pi V_\pi
 
 $$
@@ -222,6 +238,7 @@ $$
 #### 2. 贝尔曼期望方程：动作价值函数推导
 
 $$
+
 \begin{aligned}
 Q^\pi(s,a)&=r(s,a)+\gamma\sum_{s'}P(s'|s,a)V^\pi(s')\\
 &=r(s,a)+\gamma\sum_{s'}P(s'|s,a)\sum_{a}\pi(a'|s)Q^\pi(s,a')\\
