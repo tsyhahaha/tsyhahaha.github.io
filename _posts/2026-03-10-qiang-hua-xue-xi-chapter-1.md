@@ -18,12 +18,37 @@ mermaid: true
 大多数强化学习的理论框架都可以用马尔可夫决策过程（MDP）来形式化。我们先来看构成这个世界交互循环的最基础元素：
 
 ```mermaid
-%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Menlo, Monaco, monospace", "fontSize": "14px", "primaryColor": "#e8f4f8", "primaryTextColor": "#1a1a2e", "primaryBorderColor": "#ffffff", "lineColor": "#ffffff", "secondaryColor": "#d4e8ed", "tertiaryColor": "#f0f8ff", "background": "#1a1a2e", "mainBkg": "#2d2d44", "nodeBorder": "#ffffff", "clusterBkg": "#2d2d44", "clusterBorder": "#4a4a6a", "titleColor": "#ffffff"}}}%%
-graph TD
-    A["Agent (智能体)"]
-    E["Environment (环境)"]
-    A -- "Action" --> E
-    E -- "State & Reward" --> A
+%%{init: {
+    "look": "handDrawn",
+    "theme": "base",
+    "themeVariables": {
+        "background": "#1a1a2e",
+        "primaryTextColor": "#ffffff",
+        "lineColor": "#e1d4ac",
+        "fontFamily": "Menlo, Monaco, monospace",
+        "fontSize": "16px",
+        "edgeLabelBackground": "rgba(0,0,0,0)",
+        "labelBackgroundColor": "rgba(0,0,0,0)"
+    }
+}}%%
+
+graph LR
+    A(["<div style='display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px 15px;'><span style='font-size:3em;'>🤖</span><b style='font-size:1.2em; color:#ffffff; margin-top:5px;'>Agent (智能体)</b><i style='font-size:0.85em; color:#e0e0e0; margin-top:3px;'>做出决策</i></div>"])
+
+    E(["<div style='display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px 15px;'><span style='font-size:3em;'>🌍</span><b style='font-size:1.2em; color:#ffffff; margin-top:5px;'>Environment (环境)</b><i style='font-size:0.85em; color:#e0e0e0; margin-top:3px;'>反馈状态和奖励</i></div>"])
+
+    %% 使用 span 替代 div，去掉 margin，避免隐形边框遮挡连线
+    A -- "<span style='color:#ff9f43; font-weight:bold; font-size:1.1em;'>Action</span>" --> E
+    E -- "<span style='color:#55efc4; font-weight:bold; font-size:1.1em;'>State & Reward</span>" --> A
+
+    classDef agentClass fill:#0d233a,stroke:#80d8ff,stroke-width:3px,rx:20,ry:20
+    classDef envClass fill:#0a2918,stroke:#69f0ae,stroke-width:3px,rx:20,ry:20
+    
+    class A agentClass
+    class E envClass
+    
+    linkStyle 0 stroke:#ff9f43,stroke-width:3px
+    linkStyle 1 stroke:#55efc4,stroke-width:3px
 ```
 
 * **State ($s_t$)**：环境当前的状态反映。
@@ -175,11 +200,6 @@ $$
 
 它剔除了状态本身的基准难度——如果 $A(s, a) > 0$，说明这个动作比系统平均估计更优秀，应该增加采取该动作的概率；反之则应该抑制。
 
-> **方差缩减 (Variance Reduction) 也是 RLHF 稳定的关键**
->
-> 为什么在训练 LLM 的 PPO（Proximal Policy Optimization）阶段，不直接用单步或单句 Reward 更新，而是必须费时费力地再拉起一个 Critic 模型去计算 Advantage？
-> 这是因为在人类语言生成这个无限庞大且极其稀疏的动作空间中，单靠 Reward 进行梯度估计的方差极大，极易导致策略在错误的方向上剧烈震荡崩溃。通过广义优势估计 (GAE) 把 Advantage $\hat{A}$ 作为权重乘在 Actor 网络的梯度上，相当于为模型找了一个极其稳定且合理的相对参照系，这也是保障 RLHF 最终收敛的定海神针。
-
 ---
 **References:**
 
@@ -204,7 +224,7 @@ V^\pi(s)&=\sum_{a}\pi(a|s)Q^\pi(s,a)\\
 
 $$
 
-**向量形式**
+_**向量形式推导**_
 
 状态价值函数可写为
 

@@ -67,6 +67,10 @@ $sidebar-display: 'sidebar-display'; /* the attribute for sidebar display */
     }
 
     img {
+      object-fit: cover !important;
+      object-position: center center !important;
+      width: 100% !important;
+      height: 100% !important;
       transition: transform 0.5s;
 
       &:hover {
