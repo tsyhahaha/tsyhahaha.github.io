@@ -16,7 +16,7 @@ timezone: Asia/Shanghai
 
 title: SiyuanTao's blogs # the main title
 
-tagline: A text-focused Jekyll theme # it will display as the subtitle
+tagline: The journey of self-improvement is the only investment that never loses. # it will display as the subtitle
 
 description: >- # used by seo meta and the atom feed
   A minimal, responsive and feature-rich Jekyll theme for technical writing.
@@ -89,7 +89,7 @@ pageviews:
 #     light — Use the light color scheme
 #     dark — Use the dark color scheme
 #
-theme_mode: dark # [light | dark]
+theme_mode: light # [light | dark]
 
 # The CDN endpoint for media resources.
 # Notice that once it is assigned, the CDN url

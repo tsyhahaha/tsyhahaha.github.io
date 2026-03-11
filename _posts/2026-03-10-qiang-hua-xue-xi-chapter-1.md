@@ -22,27 +22,27 @@ mermaid: true
     "look": "handDrawn",
     "theme": "base",
     "themeVariables": {
-        "background": "#1a1a2e",
-        "primaryTextColor": "#ffffff",
-        "lineColor": "#e1d4ac",
+        "background": "#ffffff",
+        "primaryTextColor": "#1a1a2e",
+        "lineColor": "#666666",
         "fontFamily": "Menlo, Monaco, monospace",
-        "fontSize": "16px",
-        "edgeLabelBackground": "rgba(0,0,0,0)",
-        "labelBackgroundColor": "rgba(0,0,0,0)"
+        "fontSize": "14px",
+        "edgeLabelBackground": "rgba(255,255,255,0.8)",
+        "labelBackgroundColor": "rgba(255,255,255,0.8)"
     }
 }}%%
 
 graph LR
-    A(["<div style='display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px 15px;'><span style='font-size:3em;'>🤖</span><b style='font-size:1.2em; color:#ffffff; margin-top:5px;'>Agent (智能体)</b><i style='font-size:0.85em; color:#e0e0e0; margin-top:3px;'>做出决策</i></div>"])
+    A(["<div style='display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px 15px;'><span style='font-size:3em;'>🤖</span><b style='font-size:1.2em; color:#1a1a2e; margin-top:5px;'>Agent (智能体)</b><i style='font-size:0.85em; color:#333333; margin-top:3px;'>做出决策</i></div>"])
 
-    E(["<div style='display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px 15px;'><span style='font-size:3em;'>🌍</span><b style='font-size:1.2em; color:#ffffff; margin-top:5px;'>Environment (环境)</b><i style='font-size:0.85em; color:#e0e0e0; margin-top:3px;'>反馈状态和奖励</i></div>"])
+    E(["<div style='display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px 15px;'><span style='font-size:3em;'>🌍</span><b style='font-size:1.2em; color:#1a1a2e; margin-top:5px;'>Environment (环境)</b><i style='font-size:0.85em; color:#333333; margin-top:3px;'>反馈状态和奖励</i></div>"])
 
     %% 使用 span 替代 div，去掉 margin，避免隐形边框遮挡连线
     A -- "<span style='color:#ff9f43; font-weight:bold; font-size:1.1em;'>Action</span>" --> E
     E -- "<span style='color:#55efc4; font-weight:bold; font-size:1.1em;'>State & Reward</span>" --> A
 
-    classDef agentClass fill:#0d233a,stroke:#80d8ff,stroke-width:3px,rx:20,ry:20
-    classDef envClass fill:#0a2918,stroke:#69f0ae,stroke-width:3px,rx:20,ry:20
+    classDef agentClass fill:#f5f5f5,stroke:#333333,stroke-width:3px,rx:20,ry:20
+    classDef envClass fill:#f0f0f0,stroke:#666666,stroke-width:3px,rx:20,ry:20
     
     class A agentClass
     class E envClass
