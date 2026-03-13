@@ -28,12 +28,12 @@ mermaid: true
 $$
 
 
-V_{k+1}^\pi(s) = \sum_a \pi(a|s) \left[ r(s,a) + \gamma \sum_{s'} P(s'\mid s,a) V_k^\pi(s') \right]
+V_{k+1}^\pi(s) = \sum_a \pi(a \mid s) \left[ r(s,a) + \gamma \sum_{s'} P(s' \mid s,a) V_k^\pi(s') \right]
 
 $$
 
 
-只要一直迭代下去，根据压缩映射原理， $ \lim_{k\to \infty}V_k^\pi(s)=V^\pi(s) $ 必然成立。在实际应用中，往往迭代到 $ \lVert V_k^\pi(s)-V_{k+1}^\pi(s)\rVert < \epsilon $ 就可以终止了。
+只要一直迭代下去，根据压缩映射原理， $ \lim_{k\to \infty}V_k^\pi(s)=V^\pi(s) $ 必然成立。在实际应用中，往往迭代到 $ \lVert V_k^\pi(s)-V_{k+1}^\pi(s) \rVert < \epsilon $ 就可以终止了。
 
 ### 1.2 策略提升 (Policy Improvement)
 
@@ -42,7 +42,7 @@ $$
 
 $$
 
-\pi'(s) = \mathop{\arg\max}_a \left[ r(s,a) + \gamma \sum_{s'} P(s'\mid s,a) V^\pi(s') \right]
+\pi'(s) = \mathop{\arg\max}_a \left[ r(s,a) + \gamma \sum_{s'} P(s' \mid s,a) V^\pi(s') \right]
 
 $$
 
@@ -74,7 +74,7 @@ $$
 $$
 
 
-V_{k+1}(s) = \max_a \left[ r(s,a) + \gamma \sum_{s'} P(s'\mid s,a) V_{k}(s') \right]
+V_{k+1}(s) = \max_a \left[ r(s,a) + \gamma \sum_{s'} P(s' \mid s,a) V_{k}(s') \right]
 
 $$
 
@@ -103,7 +103,7 @@ $$
 
 $$
 
-V^{(j)}_{\pi} = r(s,a) + \gamma \sum_{s'} P(s'\mid s,a) V^{(j-1)}_{\pi}(s')
+V^{(j)}_{\pi} = r(s,a) + \gamma \sum_{s'} P(s' \mid s,a) V^{(j-1)}_{\pi}(s')
 
 $$
 
@@ -114,7 +114,7 @@ $$
 
 ## 4. 打破上帝视角：走向“无模型” (Model-free) 探索
 
-我们在上文探讨的策略迭代与价值迭代，统称为**动态规划 (Dynamic Programming, DP)** 方法。它们拥有一个极其奢侈的假设：**绝对的上帝视角**。你必须完美知晓环境的每一个细节，即状态转移概率 $ P(s'\mid s,a) $ 和精准的奖励函数 $ r(s,a) $ 。
+我们在上文探讨的策略迭代与价值迭代，统称为**动态规划 (Dynamic Programming, DP)** 方法。它们拥有一个极其奢侈的假设：**绝对的上帝视角**。你必须完美知晓环境的每一个细节，即状态转移概率 $ P(s' \mid s,a) $ 和精准的奖励函数 $ r(s,a) $ 。
 
 然而，在面对复杂的现实物理世界，或者是像大语言模型面对人类不可穷举的自然语言“对齐偏好”时，我们根本写不出完美的转移矩阵与奖励分布。既然如此，我们还能求出最优解吗？
 
@@ -122,7 +122,7 @@ $$
 
 $$
 
-\mathrm{Model} = {状态转移概率}\ P(s'\mid s,a)  + {奖励函数}\ r(s,a)
+\mathrm{Model} = {状态转移概率}\ P(s' \mid s,a) + {奖励函数}\ r(s,a)
 
 $$
 
@@ -257,13 +257,13 @@ $$
 
 #### 2. 贝尔曼最优方程 (Bellman Optimality Equation) 
 
-1.**定义最优价值**：最优状态价值函数 $ V^\*(s) $ 和最优动作价值函数 $ Q^\*(s,a) $。它们分别是所有可能策略下的最高期望回报：
+1. **定义最优价值**：最优状态价值函数 $ V^\*(s) $ 和最优动作价值函数 $ Q^\*(s,a) $。它们分别是所有可能策略下的最高期望回报：
 
-$$
+   $$
 
-V^*(s) = \max_\pi V^\pi(s) \quad \text{和} \quad Q^*(s,a) = \max_\pi Q^\pi(s,a)
+   V^*(s) = \max_\pi V^\pi(s) \quad \text{和} \quad Q^*(s,a) = \max_\pi Q^\pi(s,a)
 
-$$
+   $$
 
 
 2. **从 $ V^* $ 到 $ Q^* $ 的映射（评估与贪心选择）**：在已知最优的 $ Q^* $ 的情况下，处于状态 $ s $ 的 Agent 要想拿到最优的 $ V^\* $ ，它该怎么做？很简单，它只需贪婪地挑选那个能产生最大 $ Q^* $ 值的动作 $ a $ 即可。因此：
@@ -294,7 +294,7 @@ $$
 
    $$
 
-      Q^*(s,a) = E_{s'\sim P}\left[ r(s,a) + \gamma \max_{a'} Q^*(s', a') \right]
+   Q^*(s,a) = E_{s'\sim P}\left[ r(s,a) + \gamma \max_{a'} Q^*(s', a') \right]
 
    $$
 

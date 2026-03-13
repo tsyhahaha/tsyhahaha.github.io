@@ -98,7 +98,7 @@ $$
 
 $$
 
-P(s_{t+1}|s_t, a_t)
+P(s_{t+1} \mid s_t, a_t)
 
 $$
 
@@ -158,7 +158,7 @@ $$
 
 $$
 
-V^\pi(s)=E_{a\sim\pi}[Q^\pi(s,a)]=\sum_{a}\pi(a|s)Q^\pi(s,a)
+V^\pi(s)=E_{a\sim\pi}[Q^\pi(s,a)]=\sum_{a}\pi(a \mid s)Q^\pi(s,a)
 
 $$
 
@@ -166,7 +166,7 @@ $Q^\pi(s,a)$ 等于即时反馈 $r$ + 下一状态的 state-value $V^\pi(s')$：
 
 $$
 
-Q^\pi(s,a)=r(s,a)+\gamma\sum_{s'}P(s'|s,a)V^\pi(s')
+Q^\pi(s,a)=r(s,a)+\gamma\sum_{s'}P(s' \mid s,a)V^\pi(s')
 
 $$
 
@@ -215,9 +215,9 @@ $$
 $$
 
 \begin{aligned}
-V^\pi(s)&=\sum_{a}\pi(a|s)Q^\pi(s,a)\\
-&=\sum_{a}\pi(a|s)[r(s,a)+\gamma\sum_{s'}P(s'|s,a)V^\pi(s')]\\
-&=\sum_{a}\pi(a|s)r(s,a)+\gamma\sum_{a}\pi(a|s)\sum_{s'}P(s'|s,a)V^\pi(s')\\
+V^\pi(s)&=\sum_{a}\pi(a \mid s)Q^\pi(s,a)\\
+&=\sum_{a}\pi(a \mid s)[r(s,a)+\gamma\sum_{s'}P(s' \mid s,a)V^\pi(s')]\\
+&=\sum_{a}\pi(a \mid s)r(s,a)+\gamma\sum_{a}\pi(a \mid s)\sum_{s'}P(s' \mid s,a)V^\pi(s')\\
 &=E_{a\sim \pi}[r(s,a)]+\gamma E_{a\sim\pi}[E_{s'\sim P}[V^\pi(s')]]\\\\
 &=E_{a\sim\pi,s'\sim P}[r(s,a)+\gamma V^\pi(s')]
 \end{aligned}
@@ -230,7 +230,7 @@ _**向量形式推导**_
 
 $$
 
-V_\pi(s)=r_\pi(s)+\gamma\sum_{s'}P_\pi(s'|s)V_\pi(s')
+V_\pi(s)=r_\pi(s)+\gamma\sum_{s'}P_\pi(s' \mid s)V_\pi(s')
 
 $$
 
@@ -241,7 +241,7 @@ $$
 \begin{aligned}
 &V_\pi = [V_\pi(s_1),...,V_\pi(s_n)]^T\in \mathbb{R}^n\\
 &r_\pi = [r_\pi(s_1),...,r_\pi(s_n)]^T\in \mathbb{R}^n\\
-&P_\pi\in \mathbb{R}^{n\times n}\ \text{and}\ [P_\pi]_{ij}=p_\pi(s_j|s_i)
+&P_\pi\in \mathbb{R}^{n\times n}\ \text{and}\ [P_\pi]_{ij}=p_\pi(s_j \mid s_i)
 \end{aligned}
 
 $$
@@ -260,9 +260,9 @@ $$
 $$
 
 \begin{aligned}
-Q^\pi(s,a)&=r(s,a)+\gamma\sum_{s'}P(s'|s,a)V^\pi(s')\\
-&=r(s,a)+\gamma\sum_{s'}P(s'|s,a)\sum_{a}\pi(a'|s)Q^\pi(s,a')\\
-&=r(s,a)+\gamma\sum_{s'}P(s'|s,a)E_{a'\sim\pi}[Q(s,a')]\\
+Q^\pi(s,a)&=r(s,a)+\gamma\sum_{s'}P(s' \mid s,a)V^\pi(s')\\
+&=r(s,a)+\gamma\sum_{s'}P(s' \mid s,a)\sum_{a}\pi(a' \mid s)Q^\pi(s,a')\\
+&=r(s,a)+\gamma\sum_{s'}P(s' \mid s,a)E_{a'\sim\pi}[Q(s,a')]\\
 &=r(s,a)+\gamma E_{s'\sim P,a'\sim\pi}E[Q(s',a')]\\\\
 &=E_{a'\sim \pi, s'\sim P}[r(s,a)+\gamma Q(s',a')]
 \end{aligned}

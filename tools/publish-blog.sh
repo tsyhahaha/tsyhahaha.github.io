@@ -87,11 +87,24 @@ echo "$FRONTMATTER$CONTENT" > "$FULL_PATH"
 
 echo "✅ 已生成博客文件: $FULL_PATH"
 
-# Git 操作
-cd "$BLOG_DIR"
-git add "_posts/${FILENAME}"
-git commit -m "feat: 发布博客 - ${TITLE}"
-git push origin master
+# 调用 LaTeX 修复脚本
+FIX_SCRIPT="/Users/siyuantao/Github/Blogs/scripts/fix_jekyll_latex.py"
+if [ -f "$FIX_SCRIPT" ]; then
+    echo "🔧 正在自动修复 LaTeX 格式..."
+    python3 "$FIX_SCRIPT" "$FULL_PATH"
+else
+    echo "⚠️ 未找到 LaTeX 修复脚本: $FIX_SCRIPT，跳过修复。"
+fi
 
-echo "🚀 已推送到 GitHub，Netlify 正在部署..."
-echo "   访问 https://tsyhahaha.netlify.app 查看"
+# Git 操作
+if [ "$SKIP_PUSH" != "1" ]; then
+    cd "$BLOG_DIR"
+    git add "_posts/${FILENAME}"
+    git commit -m "feat: 发布博客 - ${TITLE}"
+    git push origin master
+
+    echo "🚀 已推送到 GitHub，Netlify 正在部署..."
+    echo "   访问 https://tsyhahaha.netlify.app 查看"
+else
+    echo "⏸️  跳过 Git 推送 (SKIP_PUSH=1)"
+fi
