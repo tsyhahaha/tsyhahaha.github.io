@@ -28,6 +28,12 @@
 }
 
 #panel-wrapper {
+  @include bp.xl {
+    flex: 0 0 auto;
+    width: var(--panel-width);
+    max-width: var(--panel-width);
+  }
+
   /* the headings */
   .panel-heading {
     font-family: inherit;
@@ -54,6 +60,15 @@
 
   @include bp.lt(bp.get(xl)) {
     display: none;
+  }
+}
+
+main[aria-label='Main Content'],
+#tail-wrapper {
+  @include bp.xl {
+    flex: 0 0 auto;
+    width: calc(100% - var(--panel-width));
+    max-width: calc(100% - var(--panel-width));
   }
 }
 

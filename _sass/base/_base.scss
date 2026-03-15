@@ -415,6 +415,7 @@ mjx-container {
 
 #main-wrapper {
   position: relative;
+  transition: margin-left 0.3s ease-in-out;
 
   @include mx.pl-pr(0);
 
@@ -430,6 +431,12 @@ mjx-container {
     margin-left: v.$sidebar-width-large;
   }
 
+  body[sidebar-collapsed] & {
+    @include bp.lg {
+      margin-left: 1.75rem;
+    }
+  }
+
   > .container {
     min-height: 100vh;
 
@@ -440,6 +447,10 @@ mjx-container {
 
     @include bp.lt(bp.get(lg)) {
       max-width: 100%;
+    }
+
+    @include bp.xl {
+      --panel-width: 14.5rem;
     }
 
     /* Pad horizontal */
@@ -457,9 +468,25 @@ mjx-container {
     }
 
     @include bp.xxxl {
+      --panel-width: 15.5rem;
+
       max-width: v.$main-content-max-width;
 
       @include mx.pl-pr(1.75rem, true);
+    }
+
+    body[sidebar-collapsed] & {
+      @include bp.xl {
+        --panel-width: 13.5rem;
+
+        max-width: min(calc(100vw - 4rem), 86.5rem);
+      }
+
+      @include bp.xxxl {
+        --panel-width: 14rem;
+
+        max-width: min(calc(100vw - 5rem), 89rem);
+      }
     }
   }
 }

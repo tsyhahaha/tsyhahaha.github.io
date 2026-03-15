@@ -35,25 +35,19 @@ mermaid: true
 我们的优化目标 $J(\theta)$ 是寻找最大化**期望累计回报 (Expected Return)** 的策略参数 $\theta$：
 
 $$
-
 J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta} [R(\tau)]
-
 $$
 
-直接对该期望求导面临一个数学障碍：轨迹回报的分布依赖于环境的未知动态转移矩阵 $P(s' \mid s,a)$，它是不可导的。幸运的是，借助**对数导数技巧 (Log-derivative trick)**：
+考虑到用梯度上升，但直接对该期望求导面临一个数学障碍：轨迹回报的分布依赖于环境的未知动态转移矩阵 $P(s' \mid s,a)$，它是不可导的。幸运的是，借助**对数导数技巧 (Log-derivative trick)**：
 
 $$
-
 \nabla_\theta \pi_\theta = \pi_\theta \nabla_\theta \log \pi_\theta
-
 $$
 
 我们能够巧妙地将关于分布的导数，转化为该分布下的期望（详见附录证明）。如此一来，环境的黑盒转移概率在求导过程中被完全消解，留下了著名的**策略梯度定理**：
 
 $$
-
 \nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta} \left[ \sum_{t=0}^{T} \nabla_\theta \log \pi_\theta(a_t \mid s_t) \cdot Q^{\pi}(s_t, a_t) \right]
-
 $$
 
 
@@ -70,20 +64,30 @@ $$
 策略梯度定理中唯一的未知量是 $Q^{\pi}(s_t, a_t)$。作为最经典的实现，**REINFORCE** 算法采用了蒙特卡洛 (Monte Carlo) 估计法：让模型完整生成整条轨迹（Episode），获取真实的累计得分 $G_t$ 作为 $Q$ 值的无偏估计。
 
 $$
-
 G_t = \sum_{k=0}^{\infty} \gamma^k r_{t+k}
-
 $$
 
 参数更新公式随即化简为：
 
 $$
-
 \theta \leftarrow \theta + \alpha \nabla_\theta \log \pi_\theta(a_t \mid s_t) G_t
-
 $$
 
-在典型的 RLHF 设定中，这等价于：LLM 吐出完整的回复，被输入 Reward Model (RM) 打分，该标量奖励随后作为 $G_0$ 广播至生成该回复的每一个 Token 头上进行梯度更新。
+在典型的 RLHF 设定中，一个常见的朴素近似是：LLM 吐出完整的回复，被输入 Reward Model (RM) 打分，然后将这个终局标量奖励“广播”给生成该回复的每一个 Token。
+
+但若严格遵守因果结构，时刻 $t$ 的状态 $s_t$ 只影响其后的动作与奖励，因此用于更新该 Token 的不应是统一的 $G_0$，而应是该时刻起的剩余回报：
+
+$$
+G_t = \sum_{k=0}^{T-t} \gamma^k r_{t+k}
+$$
+
+若 RLHF 中除终点 RM 打分外其余步奖励均为 0，即仅有 $r_T = r_{\text{RM}}$，则有：
+
+$$
+G_t = \gamma^{T-t} r_{\text{RM}}
+$$
+
+
 
 ---
 
@@ -99,17 +103,13 @@ $$
 数学上，我们可以为回馈引入一个只依赖于状态的**基线 (Baseline) $b(s)$**。可以证明，减去基线**不会改变策略梯度的期望方向（保持无偏）**，但能极大地缩小梯度的方差：
 
 $$
-
 \nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta}\left[\nabla_\theta \log \pi_\theta(a_t \mid s_t) \cdot (G_t - b(s_t)) \right]
-
 $$
 
 在最佳实践中，$b(s)$ 通常被设定为状态价值函数 $V(s_t)$。此时，$G_t - V(s_t)$ 蜕变成了一个全新的度量：**优势函数 (Advantage Function, $A_t$)**。
 
 $$
-
 \nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta}\left[\nabla_\theta \log \pi_\theta(a_t \mid s_t) \cdot A(s_t, a_t)\right]
-
 $$
 
 
@@ -128,12 +128,10 @@ $$
 我们在 Reward 中动态惩罚新策略 $\pi_\theta$ 偏离参考模型 $\pi_{\text{ref}}$ 的距离：
 
 $$
-
 r_t^{\text{penalized}} = r_t - \beta \log \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\text{ref}}(a_t \mid s_t)}
-
 $$
 
-这不仅防止了模型“遗忘” SFT 阶段学习到的自然语言先验（Language Prior），也在本质上平滑了优化地形，从根本上缓解了策略退化。
+这不仅防止了模型“遗忘” SFT 阶段学习到的自然语言先验（Language Prior），也在本质上**平滑了优化地形**，从根本上缓解了策略退化。
 
 
 ## 附录
@@ -143,56 +141,44 @@ $$
 目标函数（轨迹的回报期望）：
 
 $$
-
 \begin{aligned}
 J(\theta) &= \mathbb{E}_{\tau \sim \pi_\theta}[R(\tau)] \\
 &= \int P(\tau \mid \theta) R(\tau) d\tau
 \end{aligned}
-
 $$
 
 利用 Log-derivative 技巧求梯度：
 
 $$
-
 \begin{aligned}
 \nabla_\theta J(\theta) &= \int \nabla_\theta P(\tau \mid \theta) R(\tau) d\tau \\
 &= \int P(\tau \mid \theta) \nabla_\theta \log P(\tau \mid \theta) R(\tau) d\tau \\
 &= \mathbb{E}_{\tau \sim \pi_\theta}[\nabla_\theta \log P(\tau \mid \theta) R(\tau)]
 \end{aligned}
-
 $$
 
 展开轨迹概率：
 
 $$
-
 P(\tau \mid \theta) = \rho_0(s_0) \prod_{t=0}^T P(s_{t+1} \mid s_t, a_t) \pi_\theta(a_t \mid s_t)
-
 $$
 
 对其取对数：
 
 $$
-
 \log P(\tau \mid \theta) = \log \rho_0(s_0) + \sum_{t=0}^T \log P(s_{t+1} \mid s_t, a_t) + \sum_{t=0}^T \log \pi_\theta(a_t \mid s_t)
-
 $$
 
 求梯度，由于前两项（初始状态概率和环境物理转移概率）与 $\theta$ 无关，恒为 0：
 
 $$
-
 \nabla_\theta \log P(\tau \mid \theta) = \sum_{t=0}^T \nabla_\theta \log \pi_\theta(a_t \mid s_t)
-
 $$
 
 根据因果律（未来的预测不影响过去的收益），剥离积分并将 $R(\tau)$ 等效化为时刻 $t$ 的状态-动作长期期望回报 $Q^\pi(s_t, a_t)$，即得：
 
 $$
-
 \nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta} \left[ \sum_{t=0}^{T} \nabla_\theta \log \pi_\theta(a_t \mid s_t) \cdot Q^\pi(s_t, a_t) \right]
-
 $$
 
 #### 2. 基线 (Baseline) 的无偏性证明
@@ -200,13 +186,11 @@ $$
 证明减去仅与状态有关的基线 $b(s)$ 不改变期望梯度的方向：
 
 $$
-
 \begin{aligned}
 \mathbb{E}_{a \sim \pi_\theta} [ \nabla_\theta \log \pi_\theta(a \mid s) b(s) ] &= \sum_{a} \pi_\theta(a \mid s) \frac{\nabla_\theta \pi_\theta(a \mid s)}{\pi_\theta(a \mid s)} b(s) \\
 &= b(s) \nabla_\theta \sum_a \pi_\theta(a \mid s) \\
 &= b(s) \nabla_\theta(1) = 0
 \end{aligned}
-
 $$
 
 因此，Baseline 在不改变期望的前提下有效重塑了梯度的分布边界，大幅削减了方差。
