@@ -21,6 +21,39 @@ if [ -z "$TITLE" ]; then
     exit 1
 fi
 
+extract_front_matter_value() {
+    local field_name="$1"
+    local file_path="$2"
+
+    awk -v key="$field_name" '
+        NR == 1 && $0 == "---" { in_frontmatter = 1; next }
+        in_frontmatter && $0 == "---" { exit }
+        in_frontmatter && $0 ~ ("^" key ":[[:space:]]*") {
+            sub("^" key ":[[:space:]]*", "", $0)
+            print
+            exit
+        }
+    ' "$file_path"
+}
+
+extract_first_heading() {
+    local file_path="$1"
+
+    sed -n 's/^# \+//p' "$file_path" | head -1
+}
+
+format_yaml_scalar() {
+    local value="$1"
+
+    if [[ "$value" == " "* || "$value" == *" " || "$value" == *":"* || "$value" == *"#"* || "$value" == *'"'* || "$value" == *"'"* ]]; then
+        value="${value//\\/\\\\}"
+        value="${value//\"/\\\"}"
+        printf '"%s"' "$value"
+    else
+        printf '%s' "$value"
+    fi
+}
+
 # 生成 slug（URL 友好的文件名）
 SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9\s-]//g' | sed 's/\s+/-/g')
 
@@ -46,7 +79,7 @@ DRAFT_FILE=""
 if [ -f "${DRAFT_DIR}/${FILENAME}" ]; then
     DRAFT_FILE="${DRAFT_DIR}/${FILENAME}"
 elif [ -f "${DRAFT_DIR}/${SLUG}.md" ]; then
-    DRAFT_FILE="${DRAFT_DIR}/${SLUG}.md}"
+    DRAFT_FILE="${DRAFT_DIR}/${SLUG}.md"
 else
     # 查找最新的 md 文件
     DRAFT_FILE=$(ls -t "$DRAFT_DIR"/*.md 2>/dev/null | head -1)
@@ -60,6 +93,18 @@ fi
 
 echo "   找到草稿: $DRAFT_FILE"
 
+# 优先保留草稿已有标题，其次读取正文 H1，最后回退到命令行标题
+DRAFT_TITLE=$(extract_front_matter_value "title" "$DRAFT_FILE")
+HEADING_TITLE=$(extract_first_heading "$DRAFT_FILE")
+
+if [ -n "$DRAFT_TITLE" ]; then
+    FINAL_TITLE="$DRAFT_TITLE"
+elif [ -n "$HEADING_TITLE" ]; then
+    FINAL_TITLE=$(format_yaml_scalar "$HEADING_TITLE")
+else
+    FINAL_TITLE=$(format_yaml_scalar "$TITLE")
+fi
+
 # 读取现有内容（如果有的话，去除已有的 front matter）
 CONTENT=$(sed -n '/^---$/,/^---$/d; p' "$DRAFT_FILE")
 
@@ -67,7 +112,7 @@ CONTENT=$(sed -n '/^---$/,/^---$/d; p' "$DRAFT_FILE")
 FRONTMATTER=$(cat <<EOF
 ---
 layout: post
-title: "$TITLE"
+title: $FINAL_TITLE
 date: $(date +%Y-%m-%d\ %H:%M:%S\ +0800)
 author: $AUTHOR
 tags: []

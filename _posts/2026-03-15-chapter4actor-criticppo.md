@@ -47,9 +47,7 @@ $$
 A_t = G_t - V(s_t)
 $$
 
-但这只是第一步。Actor-Critic 架构真正的突破在于：**我们不再把 $V(s_t)$ 视作一个固定的数学对象，而是显式训练一个网络去逼近它。**
-
-这意味着，策略更新不再依赖整条轨迹的“终局总结”，而是可以借助一个在线（online）学习的评论员，在每一步都获得更细粒度、更低方差的反馈。
+但这只是第一步。Actor-Critic 架构真正的突破在于：**我们不再把 $V(s_t)$ 视作一个固定的数学对象，而是显式训练一个网络去逼近它。**这意味着，策略更新不再依赖整条轨迹的“终局总结”，而是可以借助一个在线（online）学习的评论员，在每一步都获得更细粒度、更低方差的反馈。
 
 ---
 
@@ -62,38 +60,12 @@ Actor-Critic 是对策略梯度最自然的工程化分工：
 
 其核心思想极其朴素：**Actor 负责探索世界，Critic 负责告诉 Actor 哪些选择比预期更好。**
 
-### 2.1 TD 在 Value-based 与 Policy-gradient 中的角色差异
-
-时序差分（Temporal Difference, TD）并不是 Actor-Critic 独有的概念，但它在 **基于价值的 RL** 和 **策略梯度 RL** 中承担的职责并不一样。
-
-在 Value-based 算法里，TD 是**主更新规则本身**。无论是 TD(0)、SARSA 还是 Q-Learning，本质上都在直接更新 $V$ 或 $Q$，试图让价值估计满足贝尔曼方程。例如 Q-Learning 的更新：
-
-$$
-
-Q(s_t,a_t)\leftarrow Q(s_t,a_t)+\alpha\left[r_t+\gamma \max_{a'}Q(s_{t+1},a')-Q(s_t,a_t)\right]
-
-$$
-
-这里的 TD 误差直接承担了“学价值，并由价值导出策略”的全部职责。
-
-而在策略梯度路线里，真正被优化的对象始终是策略 $\pi_\theta$。TD 不再直接产出策略，而是承担两个更间接的角色：
-
-* 它为 **Critic** 提供价值学习的回归目标；
-* 它为 **Actor** 提供一个低方差的 Advantage 近似。
-
-因此，两条路线的根本区别在于：
-
-* **Value-based RL**：TD 直接推动价值函数逼近最优解；
-* **Actor-Critic**：TD 先帮助 Critic 学会评估，再由 Critic 反过来帮助 Actor 做策略提升。
-
-### 2.2 Critic 的更新信号：从 Bellman Equation 到 TD Target
+### 2.1 Critic 的更新信号：从 Bellman Equation 到 TD Target
 
 为什么 Critic 可以不等待整条轨迹结束，就提前学习“这个状态未来值多少钱”？答案来自贝尔曼方程。对于固定策略 $\pi$，状态价值满足：
 
 $$
-
 V^\pi(s_t)=\mathbb{E}\left[r_t+\gamma V^\pi(s_{t+1})\right]
-
 $$
 
 这意味着：**一个状态的长期价值，可以递归地拆成“眼前一步的奖励”加上“下一状态的折扣价值”。**
@@ -101,62 +73,65 @@ $$
 正因为有了这个递推结构，Critic 才可以把对未来的估计“借”回来更新当下，而不必等整条 Episode 结束。这种做法就是 **自举（Bootstrapping）**。在函数逼近情形下，我们用参数化网络 $V_\phi$ 去近似 $V^\pi$，于是得到 TD Target：
 
 $$
-
 y_t = r_t + \gamma V_\phi(s_{t+1})
-
 $$
 
 并令 Critic 通过回归这个目标来学习：
 
 $$
-
 \mathcal{L}_{\text{value}}(\phi) = \mathbb{E}\left[(V_\phi(s_t)-y_t)^2\right]
-
 $$
 
-如果把“当前估计”和“TD Target”做差，就得到单步时序差分误差：
+如果把“TD Target”和“当前估计”做差，就得到单步时序差分误差：
 
 $$
-
 \delta_t = r_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t)
-
 $$
 
-因此，所谓“Critic 用 Bellman 自举不断修正自己的判断”，并不是一句口号，而是指：**Critic 每次都在用贝尔曼递推给出的局部一致性条件，逼迫自己的价值估计向更合理的方向收敛。**
+因此，所谓“Critic 用 Bellman 自举不断修正自己的判断”，是指：**Critic 每次都在用贝尔曼递推给出的局部一致性条件，逼迫自己的价值估计向更合理的方向收敛。**
 
-### 2.3 Actor 的更新信号：从 TD Error 到 Advantage
+### 2.2 Actor 的更新信号：从 TD Error 到 Advantage
 
-TD 误差之所以能进一步服务于 Actor，是因为对真实价值函数而言，优势函数满足：
+策略梯度最原始的目标：
 
 $$
+\nabla_\theta J(\theta)
+=
+\mathbb{E}_{\tau \sim \pi_\theta}
+\left[
+\sum_t \nabla_\theta \log \pi_\theta(a_t \mid s_t)\, Q^\pi(s_t,a_t)
+\right]
+$$
 
+REINFORCE 里的 $G_t-V(s_t)$，本质上是该理论式子的 Monte Carlo 版本：因为无法直接得到真实的 $Q^\pi(s_t,a_t)$，便用无偏采样回报 $G_t$ 去估计：
+
+$$
+Q^\pi(s_t,a_t)\approx G_t
+\quad \Longrightarrow \quad
+A^\pi(s_t,a_t)\approx G_t-V(s_t)
+$$
+
+而对于 Actor-Critic 阶段，我们不再每次都等完整回报 $G_t$，而是进一步借助 Critic 和贝尔曼递推，用更低方差的一步 TD 形式去近似同一个 Advantage（更详细的解释见附录）。对真实价值函数而言：
+
+$$
 A^\pi(s_t,a_t)=Q^\pi(s_t,a_t)-V^\pi(s_t)
 =
 \mathbb{E}\left[r_t+\gamma V^\pi(s_{t+1})-V^\pi(s_t) \mid s_t,a_t\right]
-
 $$
 
-这说明：**在 Critic 足够准确时，TD 误差正是 Advantage 的一个一步近似。**
-
-因此，在最朴素的 one-step Actor-Critic 中，我们直接令
+这说明：**在 Critic 足够准确时，TD 误差正是 Advantage 的一个一步近似。**因此，在最朴素的 one-step Actor-Critic 中，我们直接令
 
 $$
-
 \hat A_t=\delta_t
-
 $$
 
 并据此更新 Actor：
 
 $$
-
 \theta \leftarrow \theta + \alpha \nabla_\theta \log \pi_\theta(a_t \mid s_t)\hat A_t
-
 $$
 
-但现代 Actor-Critic 很少只停留在一步。更常见的做法，是把一串未来的 TD 误差继续加权累积，构造多步 Advantage 估计器，例如下一节要讲的 GAE。  所以更准确的表述是：**$\delta_t$ 是最基础的一步 Advantage 估计，而 GAE 则是由多步 TD 残差加权得到的更稳定版本。**
-
-这就是 Actor-Critic 的本质：**Critic 用贝尔曼递推学习“局面值多少钱”，Actor 用 Critic 产生的 Advantage 信号学习“这个动作值不值得鼓励”。**
+Actor-Critic 的本质：**Critic 用贝尔曼递推学习“局面值多少钱”，Actor 用 Critic 产生的 Advantage 信号学习“这个动作值不值得鼓励”。**
 
 > **Post-Training 视角：Value Head 为什么如此关键？**
 >
@@ -165,13 +140,11 @@ $$
 >
 > 这一步极其重要，因为它把原本只存在于终局的 RM 标量奖励，变成了一个沿着生成前缀不断传播的、可学习的价值场。
 
-### 2.4 Actor-Critic 的灵魂：用 Advantage 做“相对评分”
+### 2.3 Actor-Critic 的灵魂：用 Advantage 做“相对评分”
 
-上一小节已经说明，Critic 最终提供给 Actor 的，不是一个绝对回报，而是一个近似 Advantage 的更新信号。其意义在于：它给出了一个**相对评分标准**。
+Critic 最终提供给 Actor 的，不是一个绝对回报，而是一个近似 Advantage 的更新信号。其意义在于：它给出了一个**相对评分标准**。
 
-在 Actor-Critic 中，我们往往不会直接拟合昂贵的 $Q(s,a)$，而是通过 TD 结构近似得到一个优势估计量 $\hat A_t$，再用它指导策略更新。
-
-这件事背后的哲学很重要：**Actor 不需要知道“这个动作最终拿了多少分”，它只需要知道“这个动作是否比当前状态下的平均预期更好”。**这也是为什么 Advantage 比原始 Return 更适合做训练信号：
+在 Actor-Critic 中，我们往往不会直接拟合昂贵的 $Q(s,a)$，而是通过 TD 结构近似得到一个优势估计量 $\hat A_t$，再用它指导策略更新。这件事背后的哲学很重要：**Actor 不需要知道“这个动作最终拿了多少分”，它只需要知道“这个动作是否比当前状态下的平均预期更好”。**这也是为什么 Advantage 比原始 Return 更适合做训练信号：
 
 * 它自动扣除了状态本身的难度；
 * 它减少了不同 Prompt、不同轨迹之间的尺度差异；
@@ -199,7 +172,7 @@ $$
 \delta_t=r_t+\gamma V_\phi(s_{t+1})-V_\phi(s_t)
 $$
 
-则 GAE 形式为：
+则 GAE 形式为（推导见附录）：
 
 $$
 \hat A_t^{\text{GAE}(\gamma,\lambda)}=\sum_{l=0}^{T-t-1}(\gamma \lambda)^l\delta_{t+l}
@@ -207,30 +180,35 @@ $$
 
 这个公式非常容易让人误解：因为它显式依赖多个未来的 $\delta_{t+l}$，看上去似乎意味着 GAE 必须像 Monte Carlo 一样为每个时刻做“多步采样”。其实并不是。**GAE 需要的不是“为每个 $t$ 额外重启很多次采样”，而是“先拿到一批连续 rollout，再在每条 rollout 上做一次从后往前的后处理”。**
 
-更准确地说：
+#### 采样粒度
 
 * **TD**：只需要一条单步转移 $(s_t,a_t,r_t,s_{t+1})$ 就能更新；
 * **MC**：采样单位是**完整 rollout**。先采多条完整 rollout，再用 rollout 中每个时刻的真实回报 $G_t$ 去估计期望；如果要估计 $V^\pi(s)$，本质上是在多个 rollout 的状态访问上做平均。
 * **GAE**：同样从**一批 rollout** 出发，但它不是在 rollout 之间做另一层“平均”，而是在**同一条 rollout、同一个时刻 $t$** 上，把不同 horizon 的 $n$-step advantage estimator 通过 $\lambda$ 做加权混合。
 
+#### 更新时机
+
+如果从“什么时候真正能执行一次策略更新 $\Delta J(\theta)$”的角度看，这三者的区别会更直观。严格地说，我们真正更新参数时做的是
+
+$$
+\theta \leftarrow \theta + \alpha \hat g,
+\qquad
+\hat g \approx \sum_t \nabla_\theta \log \pi_\theta(a_t \mid s_t)\hat A_t
+$$
+
+因此差异的关键不在于更新公式变了，而在于：**什么时候能够拿到足够好的 $\hat A_t$ 来构造这一步梯度估计。**
+
+* **TD / one-step Actor-Critic**：理论上在走完一步、拿到 $(s_t,a_t,r_t,s_{t+1})$ 后，就已经可以构造 $\delta_t$，因此可以立刻更新 Critic，也可以立刻对 Actor 做一次 online update。
+* **MC / REINFORCE**：必须等整条 rollout 结束，拿到每个时刻对应的完整回报 $G_t$ 之后，才能回头更新这条轨迹上的所有动作。因此它的策略更新是典型的“episode-end update”。
+* **GAE**：介于两者之间。它不必像纯 MC 那样一定等到环境真正终止，但至少要先收集完一段 rollout 片段，才能从后往前递推出这段片段上所有时刻的 $\hat A_t$；然后再基于这段片段做一次或多次 batch update。
+
+换句话说：
+
+* **TD**：一步一更，最“在线”；
+* **MC**：整局结束后再更，最“延迟”；
+* **GAE**：按 rollout chunk 更新，是“分段延迟”的折中方案。
+
 这正是 GAE 在工业界如此常用的原因：它既不像单步 TD 那样只看一步、偏差偏大，也不必像 MC 那样完全依赖完整终局回报。
-
-在实现上，工业界几乎不会按定义式逐项展开求和，而是采用一个等价的**反向递推（backward recursion）**。记 $d_t$ 为终止标记（终止则为 1，否则为 0），则：
-
-$$
-\delta_t = r_t + \gamma (1-d_t)V_\phi(s_{t+1}) - V_\phi(s_t)
-$$
-
-$$
-\hat A_t = \delta_t + \gamma \lambda (1-d_t)\hat A_{t+1}
-$$
-
-也就是说，采完一段 rollout 后，我们只需从尾到头扫一遍，就能在线性时间里得到整段轨迹的 GAE。
-
-其中 $\lambda \in [0,1]$ 是一个极其关键的平衡旋钮：
-
-* **$\lambda \to 0$**：更接近单步 TD，低方差、高偏差。
-* **$\lambda \to 1$**：更接近 Monte Carlo，低偏差、高方差。
 
 在 LLM PPO / RLHF 中，这段 rollout 往往对应“整条回答生成完成后”的整段 token 序列。也就是说，**LLM 里 GAE 的常见计算方式不是每个 token 单独采样未来，而是先采一批完整 responses，再在每条 response 内沿 token 维度做一次 backward pass，最后对 batch 中所有 token 的 loss 做平均。**
 
@@ -249,14 +227,12 @@ PPO 全称 **Proximal Policy Optimization**。如果说 Actor-Critic 解决的�
 回忆策略梯度的基本形式：我们真正想优化的是当前策略 $\pi_\theta$ 下的期望回报，因此梯度写成
 
 $$
-
 \nabla_\theta J(\theta)
 =
 \mathbb{E}_{\tau\sim\pi_\theta}
 \left[
 \sum_t \nabla_\theta \log \pi_\theta(a_t \mid s_t)\hat A_t
 \right]
-
 $$
 
 这条公式隐含了一个非常强的理论要求：**采样分布必须和当前策略一致。**  也就是说，只要参数更新了一步，严格意义上我们就应该重新用新的 $\pi_\theta$ 再采一批 rollout。问题在于，现实系统根本承受不起这种“更新一步，重采一次”的成本。尤其在 PPO / RLHF 场景中，一条 response 往往很长，RM 打分、value 计算和反向传播都很贵。工程上更自然的做法是：
@@ -270,22 +246,18 @@ $$
 重要性采样正是用来修补这道鸿沟的。对于任意函数 $f(s_t,a_t)$，有
 
 $$
-
 \mathbb{E}_{a_t\sim\pi_\theta}[f(s_t,a_t)]
 =
 \mathbb{E}_{a_t\sim\pi_{\theta_{\text{old}}}}
 \left[
 \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid s_t)}f(s_t,a_t)
 \right]
-
 $$
 
 于是我们定义动作概率比：
 
 $$
-
 r_t(\theta)=\frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid s_t)}
-
 $$
 
 它的物理直觉非常明确：**同一个 old policy 样本里的动作 $a_t$，在新策略下相对被放大或缩小了多少概率。**
@@ -295,24 +267,20 @@ $$
 严格地说，如果要把整个目标从 $\pi_\theta$ 改写到 $\pi_{\theta_{\text{old}}}$，应该对整条轨迹做重要性采样：
 
 $$
-
 \mathbb{E}_{\tau\sim\pi_\theta}[F(\tau)]
 =
 \mathbb{E}_{\tau\sim\pi_{\theta_{\text{old}}}}
 \left[
 \frac{P_\theta(\tau)}{P_{\theta_{\text{old}}}(\tau)}F(\tau)
 \right]
-
 $$
 
 其中轨迹比率是每一步动作概率比的连乘：
 
 $$
-
 \frac{P_\theta(\tau)}{P_{\theta_{\text{old}}}(\tau)}
 =
 \prod_t \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid s_t)}
-
 $$
 
 但这在长序列里方差极高，几乎不可用。于是 PPO / TRPO 的做法是：**只在 old policy 附近做局部近似，把状态分布和 Advantage 估计固定在 $\pi_{\theta_{\text{old}}}$ 上，只保留每一步的 action-level ratio。**
@@ -320,14 +288,12 @@ $$
 于是得到 PPO 的 surrogate objective：
 
 $$
-
 \mathcal{L}^{\text{PG}}(\theta)
 =
 \mathbb{E}_{s_t,a_t\sim\pi_{\theta_{\text{old}}}}
 \left[
 r_t(\theta)\hat A_t
 \right]
-
 $$
 
 之所以叫 **surrogate objective**，正是因为它已经不是原始的 $J(\theta)$，而是一个在 $\pi_{\theta_{\text{old}}}$ 附近近似原目标、但更可计算也更低方差的替代目标。  它解决了“如何用旧策略采来的数据近似优化新策略”这个现实问题，但同时也埋下了新的隐患：**如果新旧策略偏得太远，这个近似就会迅速失真。**
@@ -337,7 +303,6 @@ $$
 PPO 的核心发明，是继续在 surrogate objective 上加一道“安全带”，构造出 clipped objective：
 
 $$
-
 \mathcal{L}^{\text{CLIP}}(\theta)=
 \mathbb{E}\left[
 \min \left(
@@ -345,7 +310,6 @@ r_t(\theta)\hat A_t,\;
 \mathrm{clip}(r_t(\theta),1-\epsilon,1+\epsilon)\hat A_t
 \right)
 \right]
-
 $$
 
 这里的 $\epsilon$ 通常是一个较小的常数（如 0.1 或 0.2），它定义了一个“允许偏移区间”。这个目标函数的物理意义非常漂亮：
@@ -387,9 +351,7 @@ $$
 当 PPO 被搬到大语言模型训练中时，变量只是换了一个外壳，底层逻辑几乎没有变化。设输入 Prompt 为 $q$，模型输出为 $o=(o_1,\dots,o_T)$，则状态写成：
 
 $$
-
 s_t=(q,o_{<t})
-
 $$
 
 PPO 在 LLM RLHF 中的典型流水线如下：
@@ -402,15 +364,14 @@ PPO 在 LLM RLHF 中的典型流水线如下：
 
 3. **构造 Token-level Reward**  
    终局由 Reward Model 给出句子级打分，同时叠加每一步相对参考模型 $\pi_{\text{ref}}$ 的 KL 惩罚：
+
    $$
-
- r_t^{\text{penalized}}
- =
- r_t
- -
- \beta \log \frac{\pi_\theta(o_t \mid q,o_{<t})}{\pi_{\text{ref}}(o_t \mid q,o_{<t})}
- $$
-
+   r_t^{\text{penalized}}
+   =
+   r_t
+   -
+   \beta \log \frac{\pi_\theta(o_t \mid q,o_{<t})}{\pi_{\text{ref}}(o_t \mid q,o_{<t})}
+   $$
    
 4. **训练 Critic 并计算 GAE**  
    用 Value Head 预测每个前缀状态的价值，再据此构造 $\hat A_t$。
@@ -424,7 +385,6 @@ PPO 在 LLM RLHF 中的典型流水线如下：
 写成 LLM 语境下的 PPO 目标，可以表示为：
 
 $$
-
 \mathcal{L}^{\text{CLIP}}(\theta)=
 \mathbb{E}_{q,o\sim \pi_{\theta_{\text{old}}}}
 \left[
@@ -435,17 +395,14 @@ r_t(\theta)\hat A_t,\;
 \mathrm{clip}(r_t(\theta),1-\epsilon,1+\epsilon)\hat A_t
 \right)
 \right]
-
 $$
 
 其中
 
 $$
-
 r_t(\theta)=
 \frac{\pi_\theta(o_t \mid q,o_{<t})}
 {\pi_{\theta_{\text{old}}}(o_t \mid q,o_{<t})}
-
 $$
 
 > **务必区分两种“参考策略”**
@@ -474,7 +431,29 @@ $$
 
 ## 附录
 
-#### 1. TD 误差近似 Advantage
+#### 1. TD 在 Value-based 与 Policy-based 中的角色差异
+
+时序差分（Temporal Difference, TD）并不是 Actor-Critic 独有的概念，但它在 **基于价值的 RL** 和 **策略梯度 RL** 中承担的职责并不一样。
+
+在 Value-based 算法里，TD 是**主更新规则本身**。无论是 TD(0)、SARSA 还是 Q-Learning，本质上都在直接更新 $V$ 或 $Q$，试图让价值估计满足贝尔曼方程。例如 Q-Learning 的更新：
+
+$$
+Q(s_t,a_t)\leftarrow Q(s_t,a_t)+\alpha\left[r_t+\gamma \max_{a'}Q(s_{t+1},a')-Q(s_t,a_t)\right]
+$$
+
+这里的 TD 误差直接承担了“学价值，并**由价值导出策略**”的全部职责。
+
+而在策略梯度路线里，真正被优化的对象始终是策略 $\pi_\theta$。TD 不再直接产出策略，而是承担两个更间接的角色：
+
+* 它为 **Critic** 提供价值学习的回归目标；
+* 它为 **Actor** 提供一个低方差的 Advantage 近似。
+
+因此，两条路线的根本区别在于：
+
+* **Value-based RL**：TD 直接推动价值函数逼近最优解；
+* **Actor-Critic**：TD 先帮助 Critic 学会评估，再由 Critic 反过来帮助 Actor 做策略提升。
+
+#### 2. TD Error 近似 Advantage
 
 对真实价值函数 $V^\pi$ 而言，有：
 
@@ -496,9 +475,23 @@ $$
 \delta_t=r_t+\gamma V_\phi(s_{t+1})-V_\phi(s_t)
 $$
 
-正是 Advantage 的一个低方差近似。
+正是 Advantage 的一个低方差近似。这里的“低方差”是**相对于 Monte Carlo 型的 Advantage 估计**而言的。若直接使用完整回报，则有：
 
-#### 2. GAE 的理论推导
+$$
+\hat A_t^{MC}=G_t-V^\pi(s_t)=r_t+\gamma G_{t+1}-V^\pi(s_t)
+$$
+
+MC 形式里，$G_{t+1}$ 包含了从 $t+1$ 到终点整条轨迹的全部随机性；而 TD 误差则把这段随机未来替换成了条件期望：
+
+$$
+V^\pi(s_{t+1})=\mathbb{E}[G_{t+1}\mid s_{t+1}]
+$$
+
+也就是说，TD 用“对未来回报的平均判断”替代了“某一次真实采样得到的未来结果”。从统计学视角看，这本质上是一种条件期望降方差；未来那一长串随机波动被压缩后，估计自然更稳定。
+
+当然，它的代价也很明确：若实际使用的是近似值函数 $V_\phi$ 而非真实的 $V^\pi$，就会引入偏差。因此，TD 误差的优点是低方差、训练稳定，代价是可能有偏；而 MC 恰恰相反，更接近无偏，但方差更高。GAE 则正是在这两者之间做平衡。
+
+#### 3. GAE 的理论推导
 
 先定义一个 $n$ 步 advantage 估计量：
 
@@ -508,9 +501,7 @@ $$
 \sum_{l=0}^{n-1}\gamma^l r_{t+l}+\gamma^n V_\phi(s_{t+n})-V_\phi(s_t)
 $$
 
-它表示：向前看 $n$ 步真实奖励，再用第 $n$ 步后的 Critic 估值来补尾。
-
-另一方面，单步 TD 误差为：
+它表示：向前看 $n$ 步真实奖励，再用第 $n$ 步后的 Critic 估值来补尾。另一方面，单步 TD 误差为：
 
 $$
 \delta_t=r_t+\gamma V_\phi(s_{t+1})-V_\phi(s_t)
@@ -537,7 +528,6 @@ $$
 也就是说，**$n$ 步 Advantage 可以等价写成一串 TD 误差的折扣和**。
 
 接下来引入 $\lambda$，对所有步长的 $n$ 步估计做指数加权混合：
-
 $$
 \hat A_t^{\mathrm{GAE}(\gamma,\lambda)}
 =(1-\lambda)\sum_{n=1}^{\infty}\lambda^{n-1}\hat A_t^{(n)}

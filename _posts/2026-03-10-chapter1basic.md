@@ -268,4 +268,3 @@ Q^\pi(s,a)&=r(s,a)+\gamma\sum_{s'}P(s' \mid s,a)V^\pi(s')\\
 \end{aligned}
 
 $$
-
