@@ -80,15 +80,12 @@ script_includes:
         </span>
 
         <div>
-          <!-- pageviews -->
-          {% if site.pageviews.provider and site.analytics[site.pageviews.provider].id %}
-            <span>
-              <em id="pageviews">
-                <i class="fas fa-spinner fa-spin small"></i>
-              </em>
-              {{ site.data.locales[lang].post.pageview_measure }}
-            </span>
-          {% endif %}
+          <!-- pageviews (busuanzi) -->
+          <span id="busuanzi_container_page_pv" style="display:none;">
+            <i class="far fa-eye fa-fw me-1"></i>
+            <span id="busuanzi_value_page_pv"></span>
+            {{ site.data.locales[lang].post.pageview_measure }}
+          </span>
 
           <!-- read time -->
           {% include read-time.html content=content prompt=true lang=lang %}
